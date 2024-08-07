@@ -120,7 +120,7 @@ section div img {
    import { CSSSpringEasing } from 'https://unpkg.com/spring-easing';
 
 
-   let [easings, duration] = CSSSpringEasing({
+   let [easing, duration] = CSSSpringEasing({
       // (mass, stiffness, damping, velocity)
       // spring-in-out, spring, spring-in, sprint-out-in
       // easing: "spring-out-in(1.2, 80, 30, 1)",
@@ -130,6 +130,16 @@ section div img {
       decimal: 5,
       quality: 1,
    })
+   
+   const supportsLinear = CSS.supports("transition-timing-function: linear(0, 0.25, 1)")
+
+   if (supportsLinear) {
+      easing = `linear(${easing})`
+      duration = duration
+   } else {
+      easing = 'ease'
+      duration = duration / 2.5
+   }
 
    // const mockup_5 = document.querySelector('.mockup-5')
 
@@ -160,7 +170,7 @@ section div img {
       ],{
          fill: 'forwards',
          // easing: 'ease-in-out',
-         easing: `linear(${easings})`,
+         easing: `${easing}`,
          duration: duration,
          delay: delayy
       })
@@ -169,7 +179,7 @@ section div img {
          { filter: `brightness(${brightness})` },
       ],{
          fill: 'forwards',
-         easing: `linear(${easings})`,
+         easing: `${easing}`,
          duration: duration,
          delay: delayy
       })
