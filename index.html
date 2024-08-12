@@ -26,8 +26,13 @@ body {
 
 main {
    height: 100vh;
+   /* opacity: 0; */
    display: grid;
    place-items: center;
+}
+
+.scene {
+   opacity: 0
 }
 
 section {
@@ -39,9 +44,11 @@ section {
    margin-inline: auto;
    /* border: 4px solid red;  */
    /* background: blue; */
-
+   /* opacity: 0; */
    perspective: var(--perspective);
    transform-style: preserve-3d;
+   scale: 0.90;
+
 }
 
 section div {
@@ -56,6 +63,9 @@ section div {
    /* opacity: 0.8; */
    background-color: transparent !important;
    margin: 0;
+   /* scale: 0.94 ; */
+   transform: translate3d(0, 0, -14px);
+   user-select: none;
 }
 
 section div img {
@@ -68,21 +78,28 @@ section div img {
 
 .mockup-5 {
    background-color: red;
-   transform: translate3d(calc(var(--space-side-layers) * 4), 0, -40px);
+   /* transform: translate3d(calc(var(--space-side-layers) * 4), 0, -40px); */
+   /* transform: translate3d(0, 0, 0px); */
+   /* translate: calc(var(--space-side-layers) * 4) 0; */
+
    /* scale: 0.8; */
 }
 
 .mockup-4 {
    background-color: blue;
    /* padding-right: calc(var(--space-side-layers) * 1); */
-   transform: translate3d(calc(var(--space-side-layers) * 3), 0, -30px);
+   /* transform: translate3d(0, 0, 0px); */
+   /* translate: calc(var(--space-side-layers) * 3) 0; */
+
    /* scale: 0.85; */
 }
 
 .mockup-3 {
    background-color: green;
    /* padding-right: calc(var(--space-side-layers) * 2); */
-   transform: translate3d(calc(var(--space-side-layers) * 2), 0, -20px);
+   /* transform: translate3d(0, 0, 0px); */
+   /* translate: calc(var(--space-side-layers) * 2) 0; */
+
    /* scale: 0.9; */
 }
 
@@ -90,28 +107,32 @@ section div img {
    background-color: yellow;
    /* padding-right: calc(var(--space-side-layers) * 3); */
    /* padding-left: calc(var(--space-side-layers) * 2); */
-   transform: translate3d(calc(var(--space-side-layers) * 1), 0, -10px);
+   /* transform: translate3d(0, 0, 0px); */
+   /* translate: calc(var(--space-side-layers) * 1) 0; */
    /* scale: 0.95; */
 }
 
 .mockup-1 {
    background-color: purple;
    /* padding-right: calc(var(--space-side-layers) * 4); */
-   transform: translate3d(calc(var(--space-side-layers) * 0), 0, 0px);
-   /* scale: 1; */
+   /* transform: translate3d(0, 0, 0px); */
+   /* translate: calc(var(--space-side-layers) * 0) 0; */
+
 }
 
 </style>
 
 <body>
    <main>
-      <section>
-         <div class="mockup-1"><img src="phone.png"/></div>
-         <div class="mockup-2"><img src="phone.png"/></div>
-         <div class="mockup-3"><img src="phone.png"/></div>
-         <div class="mockup-4"><img src="phone.png"/></div>
-         <div class="mockup-5"><img src="phone.png"/></div>
-      </section>
+      <div class="scene">
+         <section>
+            <div class="mockup-5"><img src="mobile-wallpaper-05.png"/></div>
+            <div class="mockup-4"><img src="mobile-wallpaper-04.png"/></div>
+            <div class="mockup-3"><img src="mobile-wallpaper-03.png"/></div>
+            <div class="mockup-2"><img src="mobile-wallpaper-02.png"/></div>
+            <div class="mockup-1"><img src="mobile-wallpaper-01.png"/></div>
+         </section>
+      </div>
    </main>
     
 </body>
@@ -119,27 +140,51 @@ section div img {
 <script type="module">
    import { CSSSpringEasing } from 'https://unpkg.com/spring-easing';
 
+   const supportsLinear = CSS.supports("transition-timing-function: linear(0, 0.25, 1)")
 
-   let [easing, duration] = CSSSpringEasing({
+   const springWithFallback = (springEasing) => {
+      let [easing, duration] = CSSSpringEasing(springEasing)
+      if (supportsLinear) {
+         easing = `linear(${easing})`
+         duration = duration
+      } else {
+         easing = 'ease'
+         duration = duration / 2.5
+      }
+      return { easing, duration }
+   }
+   
+
+   const s_multiplyMockups = springWithFallback({
       // (mass, stiffness, damping, velocity)
       // spring-in-out, spring, spring-in, sprint-out-in
-      // easing: "spring-out-in(1.2, 80, 30, 1)",
-      easing: "spring(7, 300, 40, 2)",
-      // easing: "spring(16, 360, 55, 1)",
-      // The number of decimal places to round to
+      easing: "spring(5, 300, 40, 2)",
       decimal: 5,
       quality: 1,
    })
-   
-   const supportsLinear = CSS.supports("transition-timing-function: linear(0, 0.25, 1)")
 
-   if (supportsLinear) {
-      easing = `linear(${easing})`
-      duration = duration
-   } else {
-      easing = 'ease'
-      duration = duration / 2.5
-   }
+   const s_hideFrontMockup = springWithFallback({
+      // (mass, stiffness, damping, velocity)
+      // spring-in-out, spring, spring-in, sprint-out-in
+      easing: "spring-in-out(5, 300, 40, 2)",
+      decimal: 5,
+      quality: 1,
+   })
+
+   const s_reveal = springWithFallback({
+      easing: "spring(3, 100, 35, 1)",
+      decimal: 5,
+      quality: 1,
+   })
+
+   const s_bringToFront = springWithFallback({
+      easing: "spring(3, 250, 40, 1)",
+      decimal: 5,
+      quality: 1,
+   })
+
+
+   
 
    // const mockup_5 = document.querySelector('.mockup-5')
 
@@ -148,43 +193,131 @@ section div img {
    const c_perspective = getComputedStyle(document.documentElement).getPropertyValue('--perspective')
    const c_spaceSideLayers = getComputedStyle(document.documentElement).getPropertyValue('--space-side-layers')
    const c_sideInitialMove = getComputedStyle(document.documentElement).getPropertyValue('--side-initial-move')
+   const c_delay_init = 200
 
-   const mockupElements = document.querySelectorAll('section > div')
+   const mockupsElements = document.querySelectorAll('section > div')
+   const mockupsWrapper = document.querySelector('section')
+   const sceneWrapper = document.querySelector('.scene')
+   let currentMockupInViewIndex = mockupsElements.length - 1 // the last one is the one initially in front
 
-   mockupElements.forEach((mockup, index) => {
-      // get current transform translate X position
-      const transformStart = getComputedStyle(mockup).transform // this is a matrix3d()
-      // console.log(transform)
-      
-      const translateToX = `calc(${(index * 3.6) ** 0.95} * var(--side-initial-move))`
-      const translateToZ = `-${((index + 1) * 10) ** 1.05 }px`
-      const delayy = index * 90 + 0
-      const brightness = index == 0 ? 1 : 1 - 0.4 - index * 0.03
-
-      console.log(`translate3d(${translateToX}, 0, ${translateToZ})`)
-
-      mockup.animate([
-         // mockup.animate([{ transform: `translate3d(${computedX}, ${computedY}, ${computedZ * 2})` }],{
-         { transform: transformStart },
-         { transform: `translate3d(${translateToX}, 0, ${translateToZ})` }
-      ],{
-         fill: 'forwards',
-         // easing: 'ease-in-out',
-         easing: `${easing}`,
-         duration: duration,
-         delay: delayy
-      })
-
-      mockup.animate([
-         { filter: `brightness(${brightness})` },
-      ],{
-         fill: 'forwards',
-         easing: `${easing}`,
-         duration: duration,
-         delay: delayy
-      })
-
+   mockupsWrapper.animate([
+      { scale: 1 }
+   ],{
+      fill: 'forwards',
+      easing: s_reveal.easing,
+      duration: s_reveal.duration,
+      delay: 200
    })
+   
+   sceneWrapper.animate([
+      { opacity: 1, }
+   ],{
+      fill: 'forwards',
+      easing: `ease`,
+      duration: s_reveal.duration / 4,
+      delay: 200
+   })
+      
+
+   const mockupsCSSvalues = []
+   mockupsElements.forEach((mockup, index, a) => {
+      const translateX = `calc(${((a.length - index - 1) * 5.8) ** 0.95} * var(--side-initial-move))`
+      const translateZ = `-${((a.length - index - 1) * 32) ** 1 }px`
+      const brightness = index == a.length - 1 ? 1 : 0.6 + index * 0.03
+      const translate3d = `translate3d(${translateX}, 0, ${translateZ})`
+      mockupsCSSvalues.push({ translateX, translateZ, translate3d, brightness })
+   })
+
+   console.log(mockupsCSSvalues)
+
+
+   mockupsElements.forEach((mockup, index) => {
+      const transformStart = getComputedStyle(mockup).transform
+      const { translateX, translateZ, brightness } = mockupsCSSvalues[index]
+
+      mockup.animate([
+         { transform: transformStart },
+         { transform: `translate3d(${translateX}, 0, ${translateZ})`, filter: `brightness(${brightness})` }
+      ], {
+         fill: 'forwards',
+         easing: s_multiplyMockups.easing,
+         duration: s_multiplyMockups.duration,
+         delay: index * 90 + c_delay_init + 500
+      })
+   })
+
+   const getWrappedIndex = (i, length) => {
+      return ((i % length) + length) % length
+   }
+
+   mockupsWrapper.addEventListener('click', () => {
+      const n = mockupsElements.length
+
+      for (let i = 0; i < n; i++) {
+         const mockup = mockupsElements[i]
+
+         console.log(currentMockupInViewIndex, i)
+
+         const nextMockupIndex = getWrappedIndex(i - currentMockupInViewIndex, n);
+
+         if (i == currentMockupInViewIndex ) {
+
+            console.log(mockupsElements[currentMockupInViewIndex])   
+
+            mockup.animate([
+               { transform: `translate3d(-10%, 0, 0px)` }
+            ],{
+               fill: 'forwards',
+               // easing: s_hideFrontMockup.easing,
+               // duration: s_hideFrontMockup.duration,
+               easing: 'ease-out',
+               duration: 300,
+               delay: 0
+            })
+            mockup.animate([
+               { opacity: 0 }
+            ],{
+               fill: 'forwards',
+               easing: 'ease',
+               duration: 150,
+               delay: 100
+            })
+            mockup.animate([
+               { transform: `translate3d(80%, 0, -160px)`, filter: `brightness(0.5)`, opacity: 0 },
+               { 
+                  transform: mockupsCSSvalues[nextMockupIndex].translate3d, 
+                  filter: `brightness(${mockupsCSSvalues[nextMockupIndex].brightness},)`,
+                  opacity: 1
+               }
+            ],{
+               fill: 'forwards',
+               easing: s_bringToFront.easing,
+               duration: s_bringToFront.duration,
+               delay: 300
+            })
+
+            continue
+         }
+
+         mockup.animate([
+            { 
+               transform: mockupsCSSvalues[nextMockupIndex].translate3d, 
+               filter: `brightness(${mockupsCSSvalues[nextMockupIndex].brightness})`,
+            }
+         ],{
+            fill: 'forwards',
+            // easing: s_reveal.easing,
+            // duration: s_reveal.duration,
+            easing:  s_bringToFront.easing,
+            duration: s_bringToFront.duration,
+            delay: 0
+         })
+      }
+
+      currentMockupInViewIndex = getWrappedIndex(currentMockupInViewIndex - 1, n)
+   })
+
+   
    
 </script>
 
