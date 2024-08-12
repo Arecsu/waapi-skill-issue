@@ -138,187 +138,123 @@ section div img {
 </body>
 
 <script type="module">
-   import { CSSSpringEasing } from 'https://unpkg.com/spring-easing';
+import { CSSSpringEasing } from 'https://unpkg.com/spring-easing'
 
    const supportsLinear = CSS.supports("transition-timing-function: linear(0, 0.25, 1)")
 
    const springWithFallback = (springEasing) => {
       let [easing, duration] = CSSSpringEasing(springEasing)
-      if (supportsLinear) {
-         easing = `linear(${easing})`
-         duration = duration
-      } else {
-         easing = 'ease'
-         duration = duration / 2.5
-      }
-      return { easing, duration }
+   return supportsLinear ? { easing: `linear(${easing})`, duration } : { easing: 'ease', duration: duration / 2.5 }
    }
-   
 
-   const s_multiplyMockups = springWithFallback({
-      // (mass, stiffness, damping, velocity)
-      // spring-in-out, spring, spring-in, sprint-out-in
-      easing: "spring(5, 300, 40, 2)",
+const createSpring = (params) => springWithFallback({
+   easing: `spring${params.type || ''}(${params.mass}, ${params.stiffness}, ${params.damping}, ${params.velocity})`,
       decimal: 5,
       quality: 1,
    })
 
-   const s_hideFrontMockup = springWithFallback({
-      // (mass, stiffness, damping, velocity)
-      // spring-in-out, spring, spring-in, sprint-out-in
-      easing: "spring-in-out(5, 300, 40, 2)",
-      decimal: 5,
-      quality: 1,
-   })
+const springs = {
+   multiplyMockups: createSpring({ mass: 5, stiffness: 300, damping: 40, velocity: 2 }),
+   hideFrontMockup: createSpring({ type: '-in-out', mass: 5, stiffness: 300, damping: 40, velocity: 2 }),
+   reveal: createSpring({ mass: 3, stiffness: 100, damping: 35, velocity: 1 }),
+   bringToFront: createSpring({ mass: 3, stiffness: 250, damping: 40, velocity: 1 }),
+}
 
-   const s_reveal = springWithFallback({
-      easing: "spring(3, 100, 35, 1)",
-      decimal: 5,
-      quality: 1,
-   })
-
-   const s_bringToFront = springWithFallback({
-      easing: "spring(3, 250, 40, 1)",
-      decimal: 5,
-      quality: 1,
-   })
-
-
-   
-
-   // const mockup_5 = document.querySelector('.mockup-5')
-
-   // get `--perspective` value from :root
-
-   const c_perspective = getComputedStyle(document.documentElement).getPropertyValue('--perspective')
-   const c_spaceSideLayers = getComputedStyle(document.documentElement).getPropertyValue('--space-side-layers')
-   const c_sideInitialMove = getComputedStyle(document.documentElement).getPropertyValue('--side-initial-move')
-   const c_delay_init = 200
+const getCSSVariable = (name) => getComputedStyle(document.documentElement).getPropertyValue(name)
 
    const mockupsElements = document.querySelectorAll('section > div')
    const mockupsWrapper = document.querySelector('section')
    const sceneWrapper = document.querySelector('.scene')
-   let currentMockupInViewIndex = mockupsElements.length - 1 // the last one is the one initially in front
+let currentMockupInViewIndex = mockupsElements.length - 1
 
-   mockupsWrapper.animate([
-      { scale: 1 }
-   ],{
+const animateElement = (element, keyframes, options) => element.animate(keyframes, options)
+
+const revealScene = () => {
+   animateElement(mockupsWrapper, [{ scale: 1 }], {
+      ...springs.reveal,
       fill: 'forwards',
-      easing: s_reveal.easing,
-      duration: s_reveal.duration,
       delay: 200
    })
    
-   sceneWrapper.animate([
-      { opacity: 1, }
-   ],{
+   animateElement(sceneWrapper, [{ opacity: 1 }], {
       fill: 'forwards',
-      easing: `ease`,
-      duration: s_reveal.duration / 4,
+      easing: 'ease',
+      duration: springs.reveal.duration / 4,
       delay: 200
    })
+}
+
+const calculateMockupPositions = () => {
+   const positions = []
+   const mockupsLength = mockupsElements.length
+   for (let index = 0; index < mockupsLength; index++) {
       
+      const translateX = `calc(${((mockupsLength - index - 1) * 5.8) ** 0.95} * var(--side-initial-move))`
+      const translateZ = `-${((mockupsLength - index - 1) * 32) ** 1}px`
+      const brightness = index === mockupsLength - 1 ? 1 : 0.6 + index * 0.03
+      positions.push({ translateX, translateZ, translate3d: `translate3d(${translateX}, 0, ${translateZ})`, brightness })
+   }
+   return positions
+}
 
-   const mockupsCSSvalues = []
-   mockupsElements.forEach((mockup, index, a) => {
-      const translateX = `calc(${((a.length - index - 1) * 5.8) ** 0.95} * var(--side-initial-move))`
-      const translateZ = `-${((a.length - index - 1) * 32) ** 1 }px`
-      const brightness = index == a.length - 1 ? 1 : 0.6 + index * 0.03
-      const translate3d = `translate3d(${translateX}, 0, ${translateZ})`
-      mockupsCSSvalues.push({ translateX, translateZ, translate3d, brightness })
-   })
-
-   console.log(mockupsCSSvalues)
-
-
+const positionMockups = (positions) => {
    mockupsElements.forEach((mockup, index) => {
-      const transformStart = getComputedStyle(mockup).transform
-      const { translateX, translateZ, brightness } = mockupsCSSvalues[index]
 
-      mockup.animate([
-         { transform: transformStart },
+      const { translateX, translateZ, brightness } = positions[index]
+      animateElement(mockup, [
+      { transform: getComputedStyle(mockup).transform },
          { transform: `translate3d(${translateX}, 0, ${translateZ})`, filter: `brightness(${brightness})` }
       ], {
+         ...springs.multiplyMockups,
          fill: 'forwards',
-         easing: s_multiplyMockups.easing,
-         duration: s_multiplyMockups.duration,
-         delay: index * 90 + c_delay_init + 500
+         delay: index * 90 + 700
       })
    })
-
-   const getWrappedIndex = (i, length) => {
-      return ((i % length) + length) % length
    }
 
-   mockupsWrapper.addEventListener('click', () => {
+const getWrappedIndex = (i, length) => ((i % length) + length) % length
+
+const rotateMockups = () => {
       const n = mockupsElements.length
-
-      for (let i = 0; i < n; i++) {
-         const mockup = mockupsElements[i]
-
-         console.log(currentMockupInViewIndex, i)
-
-         const nextMockupIndex = getWrappedIndex(i - currentMockupInViewIndex, n);
-
-         if (i == currentMockupInViewIndex ) {
-
-            console.log(mockupsElements[currentMockupInViewIndex])   
-
-            mockup.animate([
-               { transform: `translate3d(-10%, 0, 0px)` }
-            ],{
+   mockupsElements.forEach((mockup, i) => {
+      const nextIndex = getWrappedIndex(i - currentMockupInViewIndex, n)
+      const { translate3d, brightness } = mockupPositions[nextIndex]
+      
+      if (i === currentMockupInViewIndex) {
+         animateElement(mockup, [{ transform: 'translate3d(-10%, 0, 0px)' }], {
                fill: 'forwards',
-               // easing: s_hideFrontMockup.easing,
-               // duration: s_hideFrontMockup.duration,
                easing: 'ease-out',
                duration: 300,
-               delay: 0
             })
-            mockup.animate([
-               { opacity: 0 }
-            ],{
+         animateElement(mockup, [{ opacity: 0 }], {
                fill: 'forwards',
                easing: 'ease',
                duration: 150,
                delay: 100
             })
-            mockup.animate([
-               { transform: `translate3d(80%, 0, -160px)`, filter: `brightness(0.5)`, opacity: 0 },
-               { 
-                  transform: mockupsCSSvalues[nextMockupIndex].translate3d, 
-                  filter: `brightness(${mockupsCSSvalues[nextMockupIndex].brightness},)`,
-                  opacity: 1
-               }
-            ],{
+         animateElement(mockup, [
+         { transform: 'translate3d(80%, 0, -160px)', filter: 'brightness(0.5)', opacity: 0 },
+         { transform: translate3d, filter: `brightness(${brightness})`, opacity: 1 }
+         ], {
+            ...springs.bringToFront,
                fill: 'forwards',
-               easing: s_bringToFront.easing,
-               duration: s_bringToFront.duration,
                delay: 300
             })
-
-            continue
-         }
-
-         mockup.animate([
-            { 
-               transform: mockupsCSSvalues[nextMockupIndex].translate3d, 
-               filter: `brightness(${mockupsCSSvalues[nextMockupIndex].brightness})`,
-            }
-         ],{
+      } else {
+         animateElement(mockup, [{ transform: translate3d, filter: `brightness(${brightness})` }], {
+            ...springs.bringToFront,
             fill: 'forwards',
-            // easing: s_reveal.easing,
-            // duration: s_reveal.duration,
-            easing:  s_bringToFront.easing,
-            duration: s_bringToFront.duration,
-            delay: 0
          })
       }
-
-      currentMockupInViewIndex = getWrappedIndex(currentMockupInViewIndex - 1, n)
    })
-
    
+   currentMockupInViewIndex = getWrappedIndex(currentMockupInViewIndex - 1, n)
+};
    
+const mockupPositions = calculateMockupPositions()
+revealScene()
+positionMockups(mockupPositions)
+mockupsWrapper.addEventListener('click', rotateMockups)
 </script>
 
 </html>
