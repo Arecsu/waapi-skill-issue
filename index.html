@@ -70,72 +70,98 @@
       transform: translate3d(0, 0, -14px);
       user-select: none;
       align-content: center;
+      font-size: 0;
+      line-height: 0;
    }
    
    section div img {
       width: 100%;
-      max-height: 100%;
+      max-height: 90vh;
       margin: 0;
       padding: 0;
+      border-radius: 1vw;
       /* border: 2px solid blue; */
+
    }
    
    .mockup-5 {
       background-color: red;
-      /* transform: translate3d(calc(var(--space-side-layers) * 4), 0, -40px); */
-      /* transform: translate3d(0, 0, 0px); */
-      /* translate: calc(var(--space-side-layers) * 4) 0; */
-      
-      /* scale: 0.8; */
    }
    
    .mockup-4 {
       background-color: blue;
-      /* padding-right: calc(var(--space-side-layers) * 1); */
-      /* transform: translate3d(0, 0, 0px); */
-      /* translate: calc(var(--space-side-layers) * 3) 0; */
-      
-      /* scale: 0.85; */
    }
    
    .mockup-3 {
       background-color: green;
-      /* padding-right: calc(var(--space-side-layers) * 2); */
-      /* transform: translate3d(0, 0, 0px); */
-      /* translate: calc(var(--space-side-layers) * 2) 0; */
-      
-      /* scale: 0.9; */
    }
    
    .mockup-2 {
       background-color: yellow;
-      /* padding-right: calc(var(--space-side-layers) * 3); */
-      /* padding-left: calc(var(--space-side-layers) * 2); */
-      /* transform: translate3d(0, 0, 0px); */
-      /* translate: calc(var(--space-side-layers) * 1) 0; */
-      /* scale: 0.95; */
    }
    
    .mockup-1 {
       background-color: purple;
-      /* padding-right: calc(var(--space-side-layers) * 4); */
-      /* transform: translate3d(0, 0, 0px); */
-      /* translate: calc(var(--space-side-layers) * 0) 0; */
-      
    }
+
+   .info {
+      font-family: 'Inter';
+      /* font-family: Arial, Helvetica, sans-serif; */
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      margin-inline: 3rem;
+      opacity: 0;
+   }
+
+   .widget-container {
+      display: flex;
+      gap: 1.5rem;
+      flex-direction: column;
+   }
+
+   .controls {
+      display: flex;
+      gap: 1.2rem;
+   }
+
+   .controls button {
+      cursor: pointer;
+   }
+
+   .download-button a {
+      padding: 0.5rem 1rem;
+      border-radius: 0.2em;
+      background-color: black;
+      color: white;
+      text-decoration: none;
+   }
+   
    
 </style>
 
 <body>
    <main>
+      <div class="widget-container">
       <div class="scene">
          <section>
-            <div class="mockup-5"><img src="mobile-wallpaper-05.png"/></div>
-            <div class="mockup-4"><img src="mobile-wallpaper-04.png"/></div>
-            <div class="mockup-3"><img src="mobile-wallpaper-03.png"/></div>
-            <div class="mockup-2"><img src="mobile-wallpaper-02.png"/></div>
-            <div class="mockup-1"><img src="mobile-wallpaper-01.png"/></div>
+               <div class="mockup-5" data-download="https://google.com/5"><img src="mobile-wallpaper-05.png"/></div>
+               <div class="mockup-4" data-download="https://google.com/4"><img src="mobile-wallpaper-04.png"/></div>
+               <div class="mockup-3" data-download="https://google.com/3"><img src="mobile-wallpaper-03.png"/></div>
+               <div class="mockup-2" data-download="https://google.com/2"><img src="mobile-wallpaper-02.png"/></div>
+               <div class="mockup-1" data-download="https://google.com/1"><img src="mobile-wallpaper-01.png"/></div>
          </section>
+         </div>
+         <div class="info">
+            <span class="name">{ 1 }</span>
+            <div class="controls">
+               <button class="prev">←</button>  
+               <button class="next">→</button> 
+            </div>
+            <div class="download-button">
+               <a href="">DOWNLOAD</a>
+            </div>
+         </div>
       </div>
    </main>
    
@@ -148,7 +174,7 @@ const supportsLinear = CSS.supports("transition-timing-function: linear(0, 0.25,
 
 const springWithFallback = (springEasing) => {
    let [easing, duration] = CSSSpringEasing(springEasing)
-   return supportsLinear ? { easing: `linear(${easing})`, duration } : { easing: 'ease', duration: duration / 2.5 }
+   return supportsLinear ? { easing: `linear(${easing})`, duration } : { easing: 'ease', duration: duration / 1.7 }
 }
 
 const createSpring = (params) => springWithFallback({
@@ -162,6 +188,7 @@ const springs = {
    hideFrontMockup: createSpring({ type: '-in-out', mass: 5, stiffness: 300, damping: 40, velocity: 2 }),
    reveal: createSpring({ mass: 3, stiffness: 100, damping: 35, velocity: 1 }),
    bringToFront: createSpring({ mass: 3, stiffness: 250, damping: 40, velocity: 1 }),
+   bringFromBack: createSpring({ mass: 2, stiffness: 400, damping: 40, velocity: 2 }),
 }
 
 const getCSSVariable = (name) => getComputedStyle(document.documentElement).getPropertyValue(name)
@@ -169,9 +196,16 @@ const getCSSVariable = (name) => getComputedStyle(document.documentElement).getP
 const mockupsElements = document.querySelectorAll('section > div')
 const mockupsWrapper = document.querySelector('section')
 const sceneWrapper = document.querySelector('.scene')
+const infoWrapper = document.querySelector('.info')
+const currentMockupName = document.querySelector('.info .name')
+const downloadButton = document.querySelector('.download-button a')
 let currentMockupInViewIndex = mockupsElements.length - 1
 
 const animateElement = (element, keyframes, options) => element.animate(keyframes, options)
+
+const setDownloadLinkToCurrentView = (downloadLink) => {
+   downloadButton.href = mockupsElements[currentMockupInViewIndex].getAttribute('data-download')
+}
 
 const revealScene = () => {
    animateElement(mockupsWrapper, [{ scale: 1 }], {
@@ -186,6 +220,18 @@ const revealScene = () => {
       duration: springs.reveal.duration / 4,
       delay: 200
    })
+
+   animateElement(infoWrapper, [
+      { opacity: 0, translate: '0 0.6rem' }, 
+      { opacity: 1, translate: '0 0' } 
+   ], {
+      fill: 'forwards',
+      easing: 'ease',
+      duration: springs.reveal.duration / 4,
+      delay: 2000
+   })
+
+   setDownloadLinkToCurrentView()
 }
 
 const calculateMockupPositions = () => {
@@ -195,7 +241,7 @@ const calculateMockupPositions = () => {
       
       const translateX = `calc(${((mockupsLength - index - 1) * 5.8) ** 0.95} * var(--side-initial-move))`
       const translateZ = `-${((mockupsLength - index - 1) * 32) ** 1}px`
-      const brightness = index === mockupsLength - 1 ? 1 : 0.6 + index * 0.03
+      const brightness = index === mockupsLength - 1 ? 1 : 0.6 + index * 0.05
       positions.push({ translateX, translateZ, translate3d: `translate3d(${translateX}, 0, ${translateZ})`, brightness })
    }
    return positions
@@ -218,47 +264,82 @@ const positionMockups = (positions) => {
 
 const getWrappedIndex = (i, length) => ((i % length) + length) % length
 
-const rotateMockups = () => {
-   const n = mockupsElements.length
-   mockupsElements.forEach((mockup, i) => {
-      const nextIndex = getWrappedIndex(i - currentMockupInViewIndex, n)
-      const { translate3d, brightness } = mockupPositions[nextIndex]
-      
-      if (i === currentMockupInViewIndex) {
-         animateElement(mockup, [{ transform: 'translate3d(-10%, 0, 0px)' }], {
+const rotateMockups = (isInverted = false) => {
+   const totalMockups = mockupsElements.length
+   const indexChange = isInverted ? 1 : -1
+   const nextViewIndex = getWrappedIndex(currentMockupInViewIndex + indexChange, totalMockups)
+
+   mockupsElements.forEach((mockup, index) => {
+      const currentLoopIndex = getWrappedIndex(index - currentMockupInViewIndex - 1, totalMockups)
+      const targetIndex = isInverted 
+         ? getWrappedIndex(index - 1 - nextViewIndex, totalMockups)
+         : getWrappedIndex(index - currentMockupInViewIndex, totalMockups)
+
+      const currentPos = mockupPositions[currentLoopIndex]
+      const targetPos = mockupPositions[targetIndex]
+
+      const translatePositions = isInverted ?
+         {
+            initial: `translate3d(calc(${currentPos.translateX} + 35%), 0, calc(${currentPos.translateZ} - 72px))`,
+            mid: 'translate3d(-10%, 0, 0px)',
+            final: 'translate3d(0%, 0, 0px)'
+         } : {
+            initial: 'translate3d(-10%, 0, 0px)',
+            mid: `translate3d(calc(${targetPos.translateX} + 40%), 0, calc(${targetPos.translateZ} - 72px))`,
+            final: targetPos.translate3d
+         }
+
+      const isActiveMockup = isInverted 
+         ? index === nextViewIndex 
+         : index === currentMockupInViewIndex
+
+      if (isActiveMockup) {
+         
+         animateElement(mockup, [{ transform: translatePositions.initial }], {
             fill: 'forwards',
             easing: 'ease-out',
             duration: 300,
          })
+
          animateElement(mockup, [{ opacity: 0 }], {
             fill: 'forwards',
-            easing: 'ease',
+            easing: isInverted ? 'ease-out' : 'ease',
             duration: 150,
             delay: 100
          })
+
          animateElement(mockup, [
-         { transform: 'translate3d(80%, 0, -160px)', filter: 'brightness(0.5)', opacity: 0 },
-         { transform: translate3d, filter: `brightness(${brightness})`, opacity: 1 }
+            { transform: translatePositions.mid, filter: `brightness(${targetPos.brightness - 0.2})`, opacity: 0 },
+            { transform: translatePositions.final, filter: `brightness(${targetPos.brightness})`, opacity: 1 }
          ], {
-            ...springs.bringToFront,
+            ...(isInverted ? springs.bringFromBack : springs.bringToFront),
             fill: 'forwards',
             delay: 300
          })
       } else {
-         animateElement(mockup, [{ transform: translate3d, filter: `brightness(${brightness})` }], {
+         animateElement(mockup, [{ transform: targetPos.translate3d, filter: `brightness(${targetPos.brightness})` }], {
             ...springs.bringToFront,
             fill: 'forwards',
          })
       }
    })
    
-   currentMockupInViewIndex = getWrappedIndex(currentMockupInViewIndex - 1, n)
-};
+   currentMockupInViewIndex = nextViewIndex
+}
+
+
+const MOCKUP_NORMAL_ROTATION = false
+const MOCKUP_INVERTED_ROTATION = true
 
 const mockupPositions = calculateMockupPositions()
 revealScene()
 positionMockups(mockupPositions)
-mockupsWrapper.addEventListener('click', rotateMockups)
+// mockupsWrapper.addEventListener('click', rotateMockups)
+mockupsWrapper.addEventListener('click', rotateMockups.bind(null, MOCKUP_NORMAL_ROTATION))
+// document.querySelector('.controls .prev').addEventListener('click', rotateMockupsInvert)
+document.querySelector('.controls .prev').addEventListener('click', rotateMockups.bind(null, MOCKUP_INVERTED_ROTATION))
+// document.querySelector('.controls .next').addEventListener('click', rotateMockups)
+document.querySelector('.controls .next').addEventListener('click', rotateMockups.bind(null, MOCKUP_NORMAL_ROTATION))
 </script>
 
 </html>
