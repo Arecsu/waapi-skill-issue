@@ -12,12 +12,14 @@
    :root {
       --perspective: 200px;
       --space-side-layers: 10%;
-      --side-initial-move: 3%;
+      --side-initial-move: clamp(2.5%, 1vw, 3%);
    }
    
    body {
+      /* background: #000000; */
       background: #efefef;
       margin: 0;
+      /* color: white; */
    }
    
    * {
@@ -31,6 +33,7 @@
       place-items: center;
       overflow: hidden;
    }
+
    
    .scene {
       opacity: 0;
@@ -52,13 +55,15 @@
       scale: 0.90;
       cursor: pointer;
       justify-items: center;
+      -webkit-tap-highlight-color: transparent;
+
    }
    
    section div {
       grid-area: 1 / 1 / -1 / -1;
       /* width: 100%; */
-      height: 90vh;
-      max-width: 80%;
+      height: 100%;
+      max-width: 75%;
       /* max-height: 100%; */
       background-clip: content-box;
       /* position: absolute; */
