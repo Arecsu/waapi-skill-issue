@@ -5,9 +5,19 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <meta http-equiv="X-UA-Compatible" content="ie=edge">
    <title>My Awesome Website</title>
+   <link rel="preconnect" href="https://rsms.me/">
+   <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
 
 <style>
+
+   :root {
+      font-family: Inter, sans-serif;
+      font-feature-settings: 'liga' 1, 'calt' 1; /* fix for Chrome */
+   }
+   @supports (font-variation-settings: normal) {
+      :root { font-family: InterVariable, sans-serif; }
+   }
    
    :root {
       --perspective: 200px;
@@ -110,13 +120,16 @@
    }
 
    .info {
-      font-family: 'Inter';
-      /* font-family: Arial, Helvetica, sans-serif; */
       display: flex;
       flex-direction: row;
       justify-content: space-between;
       margin-inline: 3rem;
       opacity: 0;
+      align-items: center;
+   }
+
+   .info .name {
+      font-feature-settings: "tnum", "calt", "ccmp", "locl", "kern";
    }
 
    .widget-container {
@@ -132,6 +145,9 @@
 
    .controls button {
       cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 1.4rem;
    }
 
    .download-button a {
@@ -208,8 +224,12 @@ let currentMockupInViewIndex = mockupsElements.length - 1
 
 const animateElement = (element, keyframes, options) => element.animate(keyframes, options)
 
-const setDownloadLinkToCurrentView = (downloadLink) => {
+const setDownloadLinkToCurrentView = () => {
    downloadButton.href = mockupsElements[currentMockupInViewIndex].getAttribute('data-download')
+}
+
+const setMockupNumberToCurrentView = () => {
+   currentMockupName.innerText = `{ ${(mockupsElements.length - currentMockupInViewIndex).toString()} }`
 }
 
 const revealScene = () => {
@@ -330,6 +350,18 @@ const rotateMockups = (isInverted = false) => {
    })
    
    currentMockupInViewIndex = nextViewIndex
+   setDownloadLinkToCurrentView()
+   setMockupNumberToCurrentView()
+}
+
+const hoverFrontMockup = () => {
+   animateElement(mockupsElements[currentMockupInViewIndex], [
+      { transform: `translate3d(0, 0, 4px)` },
+   ] , {
+      fill: 'forwards',
+      easing: 'ease',
+      duration: 200
+   })
 }
 
 
@@ -341,6 +373,7 @@ revealScene()
 positionMockups(mockupPositions)
 // mockupsWrapper.addEventListener('click', rotateMockups)
 mockupsWrapper.addEventListener('click', rotateMockups.bind(null, MOCKUP_NORMAL_ROTATION))
+mockupsWrapper.addEventListener('mouseenter', hoverFrontMockup)
 // document.querySelector('.controls .prev').addEventListener('click', rotateMockupsInvert)
 document.querySelector('.controls .prev').addEventListener('click', rotateMockups.bind(null, MOCKUP_INVERTED_ROTATION))
 // document.querySelector('.controls .next').addEventListener('click', rotateMockups)
